@@ -9,8 +9,10 @@ import type { Profile } from './types';
 import { ProfileSelect } from './screens/ProfileSelect';
 import { Home } from './screens/Home';
 import { Settings } from './screens/Settings';
+import { TownSquare } from './screens/TownSquare';
+import { KeyDetective } from './screens/KeyDetective';
 
-type Screen = 'profiles' | 'home' | 'settings';
+type Screen = 'profiles' | 'home' | 'settings' | 'town' | 'game';
 
 /** Today as YYYY-MM-DD in local time (streaks are "days", not 24h windows). */
 function todayStr(): string {
@@ -41,6 +43,7 @@ export function App() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [current, setCurrent] = useState<Profile | null>(null);
   const [persisted, setPersisted] = useState<boolean | null>(null);
+  const [gameStage, setGameStage] = useState<number>(1);
 
   // First run: load profiles and ask the browser to protect our storage.
   useEffect(() => {
@@ -64,6 +67,51 @@ export function App() {
     setScreen('home');
   }
 
+  /**
+   * Adds a round's stars to the current profile and persists it. A stage
+   * counts as "completed" once it has collected 12+ stars across sessions —
+   * a low bar on purpose; mastery pacing can tighten later.
+   */
+  async function awardStars(stageId: number, stars: number) {
+    if (!current) return;
+    const prev = current.stageProgress[stageId] ?? { stars: 0, completed: false };
+    const nextStage = { stars: prev.stars + stars, completed: prev.completed || prev.stars + stars >= 12 };
+    const updated: Profile = {
+      ...current,
+      stageProgress: { ...current.stageProgress, [stageId]: nextStage },
+      starsTotal: current.starsTotal + stars,
+    };
+    await saveProfile(updated);
+    setCurrent(updated);
+    await refreshProfiles();
+  }
+
+  if (screen === 'game' && current) {
+    return (
+      <KeyDetective
+        // key forces a fresh round when the stage changes mid-session
+        key={gameStage}
+        profile={current}
+        stageId={gameStage}
+        onFinish={(stageId, stars) => void awardStars(stageId, stars)}
+        onExit={() => setScreen('town')}
+      />
+    );
+  }
+
+  if (screen === 'town' && current) {
+    return (
+      <TownSquare
+        profile={current}
+        onPlay={(stageId) => {
+          setGameStage(stageId);
+          setScreen('game');
+        }}
+        onBack={() => setScreen('home')}
+      />
+    );
+  }
+
   if (screen === 'settings') {
     return (
       <Settings
@@ -78,6 +126,7 @@ export function App() {
     return (
       <Home
         profile={current}
+        onOpenTown={() => setScreen('town')}
         onSwitchProfile={() => {
           setCurrent(null);
           setScreen('profiles');

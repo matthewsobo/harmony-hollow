@@ -1,25 +1,26 @@
 /*
  * Home — the Harmony Hollow town map. Purely a motivational shell: areas
- * unlock as stages complete. In Phase 1 the games don't exist yet, so Town
- * Square is "open" but explains that games arrive with the next update.
+ * unlock as stages complete. Town Square is open (it holds Key Detective);
+ * the other areas unlock in later phases.
  */
 import { TIER_INFO, type Profile } from '../types';
 import { TopBar } from '../components/TopBar';
 import { Tempo } from '../components/Tempo';
 
-const SPOTS = [
-  { emoji: '⛲', name: 'Town Square', locked: false, hint: 'Games coming soon!' },
-  { emoji: '🎵', name: 'Music Shop', locked: true, hint: 'Locked' },
-  { emoji: '🌳', name: 'The Park', locked: true, hint: 'Locked' },
-  { emoji: '🎭', name: 'Concert Hall', locked: true, hint: 'Locked' },
+const LOCKED_SPOTS = [
+  { emoji: '🎵', name: 'Music Shop' },
+  { emoji: '🌳', name: 'The Park' },
+  { emoji: '🎭', name: 'Concert Hall' },
 ];
 
 export function Home({
   profile,
+  onOpenTown,
   onSwitchProfile,
   onSettings,
 }: {
   profile: Profile;
+  onOpenTown: () => void;
   onSwitchProfile: () => void;
   onSettings: () => void;
 }) {
@@ -35,17 +36,19 @@ export function Home({
           {profile.streak.days > 1 ? ` · 🔥 ${profile.streak.days} days` : ''}
         </p>
         <div className="map-area">
-          {SPOTS.map((s) => (
-            <div key={s.name} className={'map-spot' + (s.locked ? ' map-spot--locked' : '')}>
-              <span className="map-spot__emoji">{s.locked ? '🔒' : s.emoji}</span>
+          <button className="map-spot map-spot--open" onClick={onOpenTown}>
+            <span className="map-spot__emoji">⛲</span>
+            Town Square
+            <span className="map-spot__hint">Key Detective!</span>
+          </button>
+          {LOCKED_SPOTS.map((s) => (
+            <div key={s.name} className="map-spot map-spot--locked">
+              <span className="map-spot__emoji">🔒</span>
               {s.name}
-              <span className="map-spot__hint">{s.hint}</span>
+              <span className="map-spot__hint">Locked</span>
             </div>
           ))}
         </div>
-        <p className="muted">
-          Tempo is still building the games — Key Detective opens in Town Square soon!
-        </p>
       </main>
     </>
   );

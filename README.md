@@ -7,9 +7,15 @@ Screen" and runs full-screen, offline.
 
 ## Current status
 
+**Phase 2** — Key Detective (tap variant) is playable: an on-screen keyboard
+teaching Stage 1 (Black Key Neighborhoods) and Stage 3 (White Key Names), with
+synthesized key sounds, spoken narration for the Junior tier, gentle hint
+progression (wrong answers cost nothing; the answer glows after two misses),
+and stars persisting per stage and per profile.
+
 **Phase 1** — app scaffold. Vite + React + TypeScript PWA with offline service
 worker, profile selection (three tiers), the Harmony Hollow map shell, and
-progress backup/restore. Game modes arrive in Phase 2+.
+progress backup/restore.
 
 **Phase 0 (closed)** — microphone de-risking, verified on the family iPad and
 iPhone. Verdict: mic play ships as a core feature. The test page lives on at

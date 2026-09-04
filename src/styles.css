@@ -188,7 +188,76 @@ body {
 .map-spot--locked { opacity: 0.45; }
 .map-spot__hint { font-size: 13px; font-weight: 400; color: var(--ink-soft); }
 
+.map-spot--open { border: 3px solid var(--accent); cursor: pointer; font-family: inherit; color: inherit; }
+.map-spot--open:active { transform: scale(0.97); }
+
 .muted { color: var(--ink-soft); font-size: 15px; text-align: center; }
+
+/* ---- Key Detective game screen ---- */
+.dots { display: flex; gap: 8px; justify-content: center; }
+.dot { width: 14px; height: 14px; border-radius: 7px; background: #e8dcc8; }
+.dot--done { background: var(--green); }
+.dot--now { background: var(--accent); }
+
+.prompt-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.prompt-text { font-size: 26px; font-weight: 800; }
+
+.feedback { min-height: 24px; margin: 0; font-size: 18px; color: var(--ink-soft); text-align: center; }
+.feedback--praise { color: var(--green); font-weight: 800; }
+
+.praise { font-size: 28px; font-weight: 800; margin: 8px 0 0; }
+.star-count { font-size: 40px; margin: 6px 0 0; }
+
+/* ---- On-screen keyboard ---- */
+.kb {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: min(300px, 38vh);
+  touch-action: manipulation; /* no double-tap zoom on fast key taps */
+}
+.kb__white {
+  flex: 1;
+  position: relative;
+  border: 2px solid #e8dcc8;
+  border-radius: 0 0 12px 12px;
+  background: #fff;
+  cursor: pointer;
+  padding: 0;
+}
+.kb__black {
+  position: absolute;
+  top: 0;
+  width: calc(100% / 7 * 0.62);
+  height: 58%;
+  background: #3d3324;
+  border: none;
+  border-radius: 0 0 10px 10px;
+  z-index: 2;
+  cursor: pointer;
+  padding: 0;
+}
+.kb__key--good { background: var(--green) !important; }
+.kb__key--bad { background: #f2c14e !important; }
+.kb__key--glow { box-shadow: 0 0 0 5px var(--accent) inset; }
+.kb__star {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 26px;
+  pointer-events: none;
+}
+.kb__label {
+  position: absolute;
+  bottom: 46px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink-soft);
+  pointer-events: none;
+}
 
 /* ---- Settings rows ---- */
 .settings-row {
