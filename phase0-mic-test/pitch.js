@@ -89,6 +89,30 @@
       else return null;
     }
 
+    // Step 4b: octave-error correction. Real-iPad testing showed C3 detected
+    // as C4: at music-stand distance the mic barely captures the fundamental,
+    // so the half-period (one octave up) dips under the threshold first.
+    // Check the DOUBLE of our candidate period: if the signal matches itself
+    // dramatically better there, the true note is an octave lower.
+    // (For a correctly-detected note, cmnd at 2x the period is about EQUAL to
+    // cmnd at the period — not clearly better — so this doesn't halve
+    // everything; the 0.5 ratio demands a decisive improvement.)
+    // Only bother when the current candidate has real residual mismatch: a
+    // wrong-octave pick always does (the odd harmonics don't fit), while a
+    // correct pick is near-perfect — and near-zero values make the ratio test
+    // below numerically meaningless (e.g. a pure sine would get halved).
+    var tau2 = tauEstimate * 2;
+    if (tau2 <= maxTau && cmnd[tauEstimate] > 0.03) {
+      // Search a small window around 2x tau (piano inharmonicity shifts it slightly).
+      var win = Math.max(2, Math.round(tau2 * 0.01));
+      var lo = Math.max(minTau, tau2 - win), hi = Math.min(maxTau, tau2 + win);
+      var best2 = lo;
+      for (var k = lo; k <= hi; k++) if (cmnd[k] < cmnd[best2]) best2 = k;
+      if (cmnd[best2] < cmnd[tauEstimate] * 0.5 && cmnd[best2] < threshold) {
+        tauEstimate = best2;
+      }
+    }
+
     // Step 5: parabolic interpolation around the minimum for sub-sample
     // precision (turns ~±5 cent error into well under ±1 cent).
     var t = tauEstimate;

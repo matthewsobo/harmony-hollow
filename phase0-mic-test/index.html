@@ -79,8 +79,9 @@
     <h2>Input level (signal gate)</h2>
     <div id="levelWrap"><div id="levelFill"></div><div id="gateMark"></div></div>
     <div class="row"><span>RMS: <span id="rmsVal">0.0000</span></span><span>Gate: <span id="gateVal">0.010</span></span></div>
-    <input type="range" id="gateSlider" min="0.001" max="0.1" step="0.001" value="0.01" />
-    <small>Notes only register above the orange gate mark. Raise this if household noise triggers false notes; lower it if soft playing or piano-at-a-distance doesn't register.</small>
+    <input type="range" id="gateSlider" min="0.001" max="0.1" step="0.0005" value="0.01" />
+    <button id="autoGateBtn" class="secondary" style="margin-top:8px;">Auto-set gate (sit quiet 2s, don't play)</button>
+    <small>Notes only register above the orange gate mark. Auto-set samples the room's background noise and puts the gate just above it — redo it when the room gets louder or quieter. Manual slider still works too.</small>
   </div>
 
   <div class="panel">
@@ -95,7 +96,7 @@
   </div>
 
   <div class="panel">
-    <h2>Confirmed notes (held &ge;3 frames)</h2>
+    <h2>Confirmed notes (held &ge;5 steady frames)</h2>
     <div id="log"><div><small>none yet</small></div></div>
   </div>
 
@@ -112,7 +113,7 @@
     const BUF_SIZE = 4096;   // ~85 ms at 48 kHz: long enough to resolve C3, short enough to feel instant
     const els = Object.fromEntries(
       ['startBtn','selftestBtn','bigNote','freqLine','centsNeedle','levelFill','gateMark',
-       'rmsVal','gateVal','gateSlider','envMode','envPerm','envRate','envEcho','envNoise',
+       'rmsVal','gateVal','gateSlider','autoGateBtn','envMode','envPerm','envRate','envEcho','envNoise',
        'envAgc','envUa','log','selftestOut'].map(id => [id, document.getElementById(id)]));
 
     let gateThreshold = 0.01;
@@ -138,7 +139,7 @@
 
     // ---- Gate slider --------------------------------------------------------
     function refreshGateUI() {
-      els.gateVal.textContent = gateThreshold.toFixed(3);
+      els.gateVal.textContent = gateThreshold.toFixed(4);
       // The meter maps RMS 0..0.2 onto 0..100% width; place the mark on the same scale.
       els.gateMark.style.left = Math.min(100, gateThreshold / 0.2 * 100) + '%';
     }
@@ -194,17 +195,50 @@
       el.classList.toggle('bad', actual !== undefined && actual !== wanted);
     }
 
+    // ---- Auto-gate calibration ----------------------------------------------
+    // Samples ~2 seconds of room noise and sets the gate a safe margin above
+    // its 95th percentile. This is the calibration step the real app will run,
+    // discovered in round 1 of iPad testing: the right gate differs per device
+    // (iPad needed 0.002, iPhone was fine at 0.01), so a fixed default is wrong.
+    let autoGateUntil = 0, autoGateLevels = null;
+    els.autoGateBtn.addEventListener('click', () => {
+      if (!analyser) { els.autoGateBtn.textContent = 'Start listening first, then tap again'; return; }
+      autoGateLevels = [];
+      autoGateUntil = performance.now() + 2000;
+      els.autoGateBtn.textContent = 'Sampling room noise…';
+    });
+
     // ---- Live detection loop ------------------------------------------------
-    // "Stability" logic: a note is only CONFIRMED (green + logged) after 3
-    // consecutive frames agreeing on the same note. This is the debouncing the
-    // real game will need so one noisy frame doesn't count as an answer.
-    let stableName = null, stableCount = 0, lastLogged = null, lastLoggedAt = 0;
+    // "Stability" logic: a note is only CONFIRMED (green + logged) after 5
+    // consecutive frames agreeing on the same note AND holding steady pitch
+    // (total drift < 30 cents across the streak). Round-1 iPad testing showed
+    // conversation registering as notes: speech is genuinely pitched, so the
+    // gate can't reject it — but speech GLIDES while a piano note holds its
+    // pitch, so the steadiness rule filters voices out.
+    const CONFIRM_FRAMES = 5;
+    const MAX_CENTS_SPAN = 30;
+    let stableName = null, stableCount = 0, streakMinC = 0, streakMaxC = 0,
+        lastLogged = null, lastLoggedAt = 0;
 
     function tick() {
       analyser.getFloatTimeDomainData(timeBuf);
       const level = rms(timeBuf);
       els.rmsVal.textContent = level.toFixed(4);
       els.levelFill.style.width = Math.min(100, level / 0.2 * 100) + '%';
+
+      if (autoGateLevels) {
+        if (performance.now() < autoGateUntil) {
+          autoGateLevels.push(level);
+        } else {
+          autoGateLevels.sort((a, b) => a - b);
+          const p95 = autoGateLevels[Math.floor(autoGateLevels.length * 0.95)] || 0;
+          gateThreshold = Math.min(0.1, Math.max(0.0015, p95 * 2.5));
+          els.gateSlider.value = gateThreshold;
+          refreshGateUI();
+          els.autoGateBtn.textContent = 'Gate auto-set to ' + gateThreshold.toFixed(4) + ' — tap to redo';
+          autoGateLevels = null;
+        }
+      }
 
       let result = null;
       if (level >= gateThreshold) {
@@ -219,10 +253,21 @@
           (note.cents >= 0 ? '+' : '') + note.cents.toFixed(0) + ' cents · clarity ' + result.clarity.toFixed(2);
         els.centsNeedle.style.left = (50 + note.cents) + '%';
 
-        if (note.name === stableName) stableCount++;
-        else { stableName = note.name; stableCount = 1; }
+        if (note.name === stableName) {
+          stableCount++;
+          streakMinC = Math.min(streakMinC, note.cents);
+          streakMaxC = Math.max(streakMaxC, note.cents);
+          // Pitch drifted too much mid-streak — that's a voice or a slide, not
+          // a ringing piano string. Restart the streak from this frame.
+          if (streakMaxC - streakMinC > MAX_CENTS_SPAN) {
+            stableCount = 1; streakMinC = streakMaxC = note.cents;
+          }
+        } else {
+          stableName = note.name; stableCount = 1;
+          streakMinC = streakMaxC = note.cents;
+        }
 
-        const isStable = stableCount >= 3;
+        const isStable = stableCount >= CONFIRM_FRAMES;
         els.bigNote.classList.toggle('stable', isStable);
         // Log each confirmed note once per "event" (2s refractory per same note).
         const now = performance.now();

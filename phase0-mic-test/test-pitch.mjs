@@ -68,6 +68,11 @@ const cases = [
   { label: 'Piano-like C5',                     buf: pianoLike(523.25),                 expect: 'C5' },
   { label: 'Piano-like C6',                     buf: pianoLike(1046.5),                 expect: 'C6' },
   { label: 'Piano-like C3 + light noise',       buf: mix(pianoLike(130.81), whiteNoise(0.03)), expect: 'C3' },
+  // The real-iPad failure case (C3 read as C4): at music-stand distance the
+  // fundamental is essentially GONE, not just weak. These must still read C3.
+  { label: 'C3, fundamental fully missing',     buf: pianoLike(130.81, { fundamentalAmp: 0 }), expect: 'C3' },
+  { label: 'C3, missing fund. + light noise',   buf: mix(pianoLike(130.81, { fundamentalAmp: 0 }), whiteNoise(0.02)), expect: 'C3' },
+  { label: 'E3, fundamental fully missing',     buf: pianoLike(164.81, { fundamentalAmp: 0 }), expect: 'E3' },
   { label: 'Piano-like A4 + light noise',       buf: mix(pianoLike(A4), whiteNoise(0.03)),     expect: 'A4' },
   // A piano 30 cents flat (badly out of tune) should still round to the right
   // note — this is the "generous tolerance" requirement in action.
