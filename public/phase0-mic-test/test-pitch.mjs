@@ -11,7 +11,12 @@
  */
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
-const { detectPitch, freqToNote, midiToFreq, rms } = require('./pitch.js');
+// pitch.js is a plain browser-style script. Loading it runs its IIFE, which
+// always sets globalThis.HHPitch — read the API from there rather than from
+// require()'s return value, which depends on how Node classifies the file
+// (the root package.json's "type": "module" changed that classification).
+require('./pitch.js');
+const { detectPitch, freqToNote, rms } = globalThis.HHPitch;
 
 const SAMPLE_RATE = 48000; // what iPads actually use
 const BUF_SIZE = 4096;     // same analysis window the page uses (~85 ms)
