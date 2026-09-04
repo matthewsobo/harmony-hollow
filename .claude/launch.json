@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "phase0-mic-test",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["-y", "serve", "phase0-mic-test", "-l", "4173"],
+      "port": 4173
+    }
+  ]
+}

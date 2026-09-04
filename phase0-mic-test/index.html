@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- viewport-fit=cover + maximum-scale=1 : fill the iPad screen edge-to-edge
+       and stop accidental pinch-zoom during the test. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>HH Mic Test</title>
+
+  <!-- PWA bits: these are what make "Add to Home Screen" launch full-screen
+       (standalone) instead of opening a Safari tab. Testing THAT context is
+       the whole point of Phase 0. -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="HH Mic Test" />
+  <link rel="apple-touch-icon" href="icon-180.png" />
+
+  <style>
+    /* Throwaway styling — just needs to be readable at piano distance. */
+    * { box-sizing: border-box; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+    body {
+      margin: 0; font-family: -apple-system, system-ui, sans-serif;
+      background: #1a1a2e; color: #eee;
+      padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+               max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    }
+    h1 { font-size: 18px; margin: 4px 0 12px; color: #f4a259; }
+    button {
+      font-size: 20px; padding: 16px 24px; border-radius: 12px; border: none;
+      background: #f4a259; color: #1a1a2e; font-weight: 700; width: 100%;
+      margin-bottom: 10px; cursor: pointer;
+    }
+    button.secondary { background: #3a3a5e; color: #eee; font-size: 16px; padding: 12px; }
+    #noteDisplay {
+      text-align: center; background: #24243e; border-radius: 16px;
+      padding: 18px 10px; margin-bottom: 12px;
+    }
+    #bigNote { font-size: 96px; font-weight: 800; line-height: 1; min-height: 100px; }
+    #bigNote.stable { color: #7bd88f; }
+    #freqLine { font-size: 20px; color: #aab; margin-top: 6px; min-height: 26px; }
+    /* Cents bar: a needle showing sharp/flat relative to the nearest note. */
+    #centsBar { position: relative; height: 14px; background: #3a3a5e; border-radius: 7px; margin: 12px 20px 2px; }
+    #centsBar::after { content: ''; position: absolute; left: 50%; top: -3px; width: 2px; height: 20px; background: #667; }
+    #centsNeedle { position: absolute; top: 1px; width: 12px; height: 12px; border-radius: 6px; background: #f4a259; left: 50%; transform: translateX(-50%); transition: left 0.08s; }
+    /* Level meter with a gate-threshold marker on it. */
+    #levelWrap { position: relative; height: 18px; background: #3a3a5e; border-radius: 9px; overflow: hidden; margin: 4px 0; }
+    #levelFill { height: 100%; width: 0%; background: #5aa9e6; transition: width 0.05s; }
+    #gateMark { position: absolute; top: 0; width: 2px; height: 100%; background: #f4a259; }
+    .panel { background: #24243e; border-radius: 12px; padding: 12px; margin-bottom: 12px; font-size: 14px; }
+    .panel h2 { font-size: 14px; margin: 0 0 8px; color: #f4a259; }
+    .row { display: flex; justify-content: space-between; padding: 2px 0; gap: 8px; }
+    .row .v { color: #7bd88f; text-align: right; word-break: break-all; }
+    .row .v.bad { color: #e66; }
+    input[type=range] { width: 100%; }
+    #log { max-height: 160px; overflow-y: auto; font-family: ui-monospace, monospace; font-size: 13px; }
+    #log div { padding: 1px 0; border-bottom: 1px solid #333; }
+    #selftestOut { font-family: ui-monospace, monospace; font-size: 12px; white-space: pre-wrap; }
+    small { color: #889; }
+  </style>
+</head>
+<body>
+  <h1>&#127900;&#65039; Harmony Hollow — Phase 0 Mic Test</h1>
+
+  <button id="startBtn">Start Listening</button>
+  <button id="selftestBtn" class="secondary">Run Built-in Self-Test (no mic needed)</button>
+
+  <div id="noteDisplay">
+    <div id="bigNote">&ndash;</div>
+    <div id="freqLine">tap Start Listening</div>
+    <div id="centsBar"><div id="centsNeedle"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#889;padding:0 20px;">
+      <span>-50c flat</span><span>in tune</span><span>+50c sharp</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Input level (signal gate)</h2>
+    <div id="levelWrap"><div id="levelFill"></div><div id="gateMark"></div></div>
+    <div class="row"><span>RMS: <span id="rmsVal">0.0000</span></span><span>Gate: <span id="gateVal">0.010</span></span></div>
+    <input type="range" id="gateSlider" min="0.001" max="0.1" step="0.001" value="0.01" />
+    <small>Notes only register above the orange gate mark. Raise this if household noise triggers false notes; lower it if soft playing or piano-at-a-distance doesn't register.</small>
+  </div>
+
+  <div class="panel">
+    <h2>Environment (screenshot this panel when reporting results)</h2>
+    <div class="row"><span>Display mode</span><span class="v" id="envMode">?</span></div>
+    <div class="row"><span>Mic permission</span><span class="v" id="envPerm">?</span></div>
+    <div class="row"><span>Sample rate</span><span class="v" id="envRate">&ndash;</span></div>
+    <div class="row"><span>Echo cancellation</span><span class="v" id="envEcho">&ndash;</span></div>
+    <div class="row"><span>Noise suppression</span><span class="v" id="envNoise">&ndash;</span></div>
+    <div class="row"><span>Auto gain</span><span class="v" id="envAgc">&ndash;</span></div>
+    <div class="row"><span>Browser</span><span class="v" id="envUa" style="font-size:11px;">&ndash;</span></div>
+  </div>
+
+  <div class="panel">
+    <h2>Confirmed notes (held &ge;3 frames)</h2>
+    <div id="log"><div><small>none yet</small></div></div>
+  </div>
+
+  <div class="panel">
+    <h2>Self-test output</h2>
+    <div id="selftestOut">not run yet</div>
+  </div>
+
+  <script src="pitch.js"></script>
+  <script>
+    'use strict';
+    const { detectPitch, freqToNote, rms } = window.HHPitch;
+
+    const BUF_SIZE = 4096;   // ~85 ms at 48 kHz: long enough to resolve C3, short enough to feel instant
+    const els = Object.fromEntries(
+      ['startBtn','selftestBtn','bigNote','freqLine','centsNeedle','levelFill','gateMark',
+       'rmsVal','gateVal','gateSlider','envMode','envPerm','envRate','envEcho','envNoise',
+       'envAgc','envUa','log','selftestOut'].map(id => [id, document.getElementById(id)]));
+
+    let gateThreshold = 0.01;
+    let audioCtx = null, analyser = null, timeBuf = null;
+
+    // ---- Environment panel (answers Phase 0 questions 1 & 2) ----------------
+    function refreshEnv() {
+      // Standalone = launched from a home-screen icon, NOT a Safari tab.
+      const standalone = window.matchMedia('(display-mode: standalone)').matches
+                      || window.navigator.standalone === true;
+      els.envMode.textContent = standalone ? 'standalone (home screen) ✅' : 'browser tab';
+      els.envUa.textContent = navigator.userAgent;
+      // Permissions API support for 'microphone' is spotty on iOS — try it, but
+      // don't rely on it. What matters for question 2 is whether iOS RE-PROMPTS
+      // on each launch, which you observe directly.
+      try {
+        navigator.permissions.query({ name: 'microphone' }).then(
+          s => { els.envPerm.textContent = s.state; },
+          () => { els.envPerm.textContent = 'query unsupported (normal on iOS)'; });
+      } catch (e) { els.envPerm.textContent = 'query unsupported (normal on iOS)'; }
+    }
+    refreshEnv();
+
+    // ---- Gate slider --------------------------------------------------------
+    function refreshGateUI() {
+      els.gateVal.textContent = gateThreshold.toFixed(3);
+      // The meter maps RMS 0..0.2 onto 0..100% width; place the mark on the same scale.
+      els.gateMark.style.left = Math.min(100, gateThreshold / 0.2 * 100) + '%';
+    }
+    els.gateSlider.addEventListener('input', () => {
+      gateThreshold = parseFloat(els.gateSlider.value);
+      refreshGateUI();
+    });
+    refreshGateUI();
+
+    // ---- Mic startup --------------------------------------------------------
+    els.startBtn.addEventListener('click', async () => {
+      els.startBtn.disabled = true;
+      els.startBtn.textContent = 'Requesting microphone…';
+      try {
+        // Ask iOS to DISABLE speech-call processing: echo cancellation, noise
+        // suppression and auto-gain are all designed for voices and can eat
+        // piano harmonics or pump the levels around. The environment panel
+        // shows whether iOS actually honored the request.
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+        });
+        // AudioContext must be created/resumed inside a user gesture on iOS.
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        await audioCtx.resume();
+
+        const source = audioCtx.createMediaStreamSource(stream);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = BUF_SIZE;
+        source.connect(analyser);
+        timeBuf = new Float32Array(BUF_SIZE);
+
+        // Report what the mic ACTUALLY gave us vs what we asked for.
+        const settings = stream.getAudioTracks()[0].getSettings();
+        els.envRate.textContent = audioCtx.sampleRate + ' Hz';
+        setFlag(els.envEcho, settings.echoCancellation, false);
+        setFlag(els.envNoise, settings.noiseSuppression, false);
+        setFlag(els.envAgc, settings.autoGainControl, false);
+
+        els.startBtn.textContent = 'Listening — play some notes!';
+        refreshEnv();
+        requestAnimationFrame(tick);
+      } catch (err) {
+        // The graceful-failure path the real app will need too: never a dead screen.
+        els.startBtn.disabled = false;
+        els.startBtn.textContent = 'Mic failed — tap to retry';
+        els.freqLine.textContent = err.name + ': ' + err.message;
+        els.envPerm.textContent = 'DENIED or failed: ' + err.name;
+      }
+    });
+
+    function setFlag(el, actual, wanted) {
+      el.textContent = actual === undefined ? 'unknown' : String(actual) + (actual === wanted ? ' ✅' : ' ⚠️ wanted ' + wanted);
+      el.classList.toggle('bad', actual !== undefined && actual !== wanted);
+    }
+
+    // ---- Live detection loop ------------------------------------------------
+    // "Stability" logic: a note is only CONFIRMED (green + logged) after 3
+    // consecutive frames agreeing on the same note. This is the debouncing the
+    // real game will need so one noisy frame doesn't count as an answer.
+    let stableName = null, stableCount = 0, lastLogged = null, lastLoggedAt = 0;
+
+    function tick() {
+      analyser.getFloatTimeDomainData(timeBuf);
+      const level = rms(timeBuf);
+      els.rmsVal.textContent = level.toFixed(4);
+      els.levelFill.style.width = Math.min(100, level / 0.2 * 100) + '%';
+
+      let result = null;
+      if (level >= gateThreshold) {
+        result = detectPitch(timeBuf, audioCtx.sampleRate);
+        if (result && result.clarity < 0.8) result = null; // low confidence -> ignore
+      }
+
+      if (result) {
+        const note = freqToNote(result.freq);
+        els.bigNote.textContent = note.name;
+        els.freqLine.textContent = result.freq.toFixed(1) + ' Hz · ' +
+          (note.cents >= 0 ? '+' : '') + note.cents.toFixed(0) + ' cents · clarity ' + result.clarity.toFixed(2);
+        els.centsNeedle.style.left = (50 + note.cents) + '%';
+
+        if (note.name === stableName) stableCount++;
+        else { stableName = note.name; stableCount = 1; }
+
+        const isStable = stableCount >= 3;
+        els.bigNote.classList.toggle('stable', isStable);
+        // Log each confirmed note once per "event" (2s refractory per same note).
+        const now = performance.now();
+        if (isStable && (stableName !== lastLogged || now - lastLoggedAt > 2000)) {
+          lastLogged = stableName; lastLoggedAt = now;
+          const div = document.createElement('div');
+          div.textContent = new Date().toLocaleTimeString() + '  ' + note.name +
+            '  ' + result.freq.toFixed(1) + ' Hz (' + (note.cents >= 0 ? '+' : '') + note.cents.toFixed(0) + 'c)';
+          els.log.prepend(div);
+          while (els.log.children.length > 40) els.log.lastChild.remove();
+        }
+      } else {
+        stableName = null; stableCount = 0;
+        els.bigNote.classList.remove('stable');
+        if (level < gateThreshold) { els.bigNote.textContent = '–'; els.freqLine.textContent = 'quiet (below gate)'; }
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // ---- Built-in self-test -------------------------------------------------
+    // Same synthetic cases as the Node harness, runnable on the iPad itself —
+    // so if live detection misbehaves there, one tap tells us whether the
+    // algorithm or the microphone path is at fault.
+    els.selftestBtn.addEventListener('click', () => {
+      const SR = 48000;
+      const mk = f => { const b = new Float32Array(BUF_SIZE);
+        [0.15, 1.0, 0.6, 0.4, 0.25].forEach((a, h) => { for (let i = 0; i < BUF_SIZE; i++)
+          b[i] += 0.4 * a * Math.sin(2 * Math.PI * f * (h + 1) * i / SR) * Math.exp(-i / SR * 1.5); });
+        return b; };
+      const noise = () => Float32Array.from({ length: BUF_SIZE }, () => 0.3 * (Math.random() * 2 - 1));
+      const cases = [
+        ['C3 (weak fundamental)', mk(130.81), 'C3'], ['G3', mk(196.0), 'G3'],
+        ['C4', mk(261.63), 'C4'], ['A4', mk(440), 'A4'],
+        ['C5', mk(523.25), 'C5'], ['C6', mk(1046.5), 'C6'],
+        ['white noise', noise(), null]];
+      let out = '';
+      for (const [label, buf, expect] of cases) {
+        const r = detectPitch(buf, SR);
+        const confident = r && r.clarity > 0.8;
+        const note = confident ? freqToNote(r.freq) : null;
+        const ok = expect === null ? !confident : (note && note.name === expect);
+        out += (ok ? 'PASS' : 'FAIL') + '  ' + label + ' -> ' + (note ? note.name + ' ' + r.freq.toFixed(1) + 'Hz' : 'no pitch') + '\n';
+      }
+      els.selftestOut.textContent = out;
+    });
+  </script>
+</body>
+</html>

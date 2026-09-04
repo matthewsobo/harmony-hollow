@@ -1,0 +1,13 @@
+{
+  "name": "HH Mic Test",
+  "short_name": "HH Mic Test",
+  "description": "Harmony Hollow Phase 0 microphone/pitch-detection test",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
+  "icons": [
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
