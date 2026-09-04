@@ -1,13 +1,13 @@
-﻿# Harmony Hollow
+# Harmony Hollow
 
 A piano practice game for kids, built as a Progressive Web App (PWA): tap-based
 note-reading quizzes plus microphone listen-and-play challenges against a real
-acoustic piano. No Mac, no App Store â€” installs via Safari's "Add to Home
+acoustic piano. No Mac, no App Store — installs via Safari's "Add to Home
 Screen" and runs full-screen, offline.
 
 ## Current status
 
-**Phase 0** â€” microphone de-risking. The [phase0-mic-test/](phase0-mic-test/)
+**Phase 0** — microphone de-risking. The [phase0-mic-test/](phase0-mic-test/)
 folder holds a throwaway test page that must be verified on a real iPad against
 the real piano before any game features get built. See
 [phase0-mic-test/PHASE0-TESTING.md](phase0-mic-test/PHASE0-TESTING.md) for the
@@ -36,8 +36,8 @@ Wait ~1 minute for the Actions run to finish (green check on the repo page).
 ## Installing on an iPad / iPhone
 
 1. Open the site URL in **Safari**.
-2. Tap the **Share** button â†’ **Add to Home Screen** â†’ **Add**.
-3. Launch from the home-screen icon â€” it opens full-screen like a native app.
+2. Tap the **Share** button → **Add to Home Screen** → **Add**.
+3. Launch from the home-screen icon — it opens full-screen like a native app.
 
 Note: after deploying an update, an installed copy may show the old version
 once before picking up the new one (normal service-worker behavior once the
