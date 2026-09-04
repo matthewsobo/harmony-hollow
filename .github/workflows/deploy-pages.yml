@@ -1,8 +1,7 @@
 # Deploys the site to GitHub Pages on every push to main.
 #
-# Right now the "site" is just static files (the Phase 0 mic test), so we
-# upload the repo as-is. When Phase 1 adds a Vite build, this workflow gains a
-# "npm ci && npm run build" step and uploads the dist/ folder instead.
+# Builds the Vite app (type-check + bundle + PWA service worker) and uploads
+# dist/. The Phase 0 mic test rides along via public/phase0-mic-test/.
 #
 # One-time setup: Pages must be enabled by hand once (repo Settings → Pages →
 # Build and deployment → Source: "GitHub Actions"), because the workflow's
@@ -33,11 +32,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - run: npm run test:pitch
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: dist
 
       - id: deployment
         uses: actions/deploy-pages@v4

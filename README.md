@@ -7,11 +7,16 @@ Screen" and runs full-screen, offline.
 
 ## Current status
 
-**Phase 0** — microphone de-risking. The [phase0-mic-test/](phase0-mic-test/)
-folder holds a throwaway test page that must be verified on a real iPad against
-the real piano before any game features get built. See
-[phase0-mic-test/PHASE0-TESTING.md](phase0-mic-test/PHASE0-TESTING.md) for the
-test checklist.
+**Phase 1** — app scaffold. Vite + React + TypeScript PWA with offline service
+worker, profile selection (three tiers), the Harmony Hollow map shell, and
+progress backup/restore. Game modes arrive in Phase 2+.
+
+**Phase 0 (closed)** — microphone de-risking, verified on the family iPad and
+iPhone. Verdict: mic play ships as a core feature. The test page lives on at
+[public/phase0-mic-test/](public/phase0-mic-test/) (still deployed at
+`/phase0-mic-test/` for future mic debugging); its findings — YIN with
+octave-error correction, per-device auto-gate calibration, steady-pitch
+confirmation to reject speech — are the spec for the Phase 4 mic pipeline.
 
 ## Hosting & deploys (GitHub Pages)
 
@@ -46,8 +51,12 @@ real app ships; the Phase 0 page has no service worker and updates on reload).
 ## Local development
 
 ```
-npx -y serve phase0-mic-test -l 4173
+npm install
+npm run dev
 ```
 
-Then open http://localhost:4173. The mic works on localhost without HTTPS in
-desktop browsers; testing on the iPad requires the deployed HTTPS site.
+Then open http://localhost:5173/harmony-hollow/ (the app is served under the
+same subpath as production). `npm run build` type-checks and produces `dist/`;
+`npm run test:pitch` runs the pitch-detector test suite. The mic works on
+localhost without HTTPS in desktop browsers; testing on the iPad requires the
+deployed HTTPS site.

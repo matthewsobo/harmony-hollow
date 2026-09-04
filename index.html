@@ -1,14 +1,28 @@
 <!DOCTYPE html>
-<!-- Root redirect: until the real app exists (Phase 1), the site root just
-     forwards to the Phase 0 mic test page. This file gets replaced by the
-     actual app's index.html later. -->
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="refresh" content="0; url=phase0-mic-test/" />
-  <title>Harmony Hollow</title>
-</head>
-<body>
-  <p><a href="phase0-mic-test/">Harmony Hollow — Phase 0 mic test</a></p>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- viewport-fit=cover lets us draw edge-to-edge on iPads/iPhones and
+         handle the safe areas ourselves; maximum-scale=1 + user-scalable=no
+         stops excited kids from accidentally pinch-zooming mid-game. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <title>Harmony Hollow</title>
+
+    <!-- iOS-specific PWA tags: these make "Add to Home Screen" launch the app
+         full-screen with its own icon instead of as a Safari tab. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Harmony" />
+    <link rel="apple-touch-icon" href="%BASE_URL%icon-180.png" />
+    <link rel="icon" type="image/png" href="%BASE_URL%icon-192.png" />
+    <meta name="theme-color" content="#fdf6ec" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

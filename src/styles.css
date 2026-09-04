@@ -1,0 +1,213 @@
+/*
+ * Global styles. Design principles baked in here (see the project brief):
+ *  - Big forgiving touch targets: every tappable thing is at least 60px tall.
+ *  - Calm visual baseline: warm cream background, one orange accent, no
+ *    background motion.
+ *  - No text selection / long-press callouts on game elements — a common
+ *    accidental-input annoyance for kids.
+ */
+
+:root {
+  --bg: #fdf6ec;          /* warm cream */
+  --card: #ffffff;
+  --ink: #3d3324;         /* soft dark brown, gentler than black */
+  --ink-soft: #8a7d68;
+  --accent: #f4a259;      /* Tempo-the-fox orange */
+  --accent-dark: #d97f2e;
+  --green: #7fb069;
+  --shadow: 0 2px 8px rgba(61, 51, 36, 0.12);
+  --radius: 18px;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  /* Stop iOS pull-to-refresh / rubber-banding from breaking gameplay. */
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  /* Respect iPhone notch / home indicator. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+           env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* ---- Top bar: identical controls in identical places on every screen ---- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  min-height: 64px;
+}
+.topbar__title {
+  font-size: 22px;
+  font-weight: 800;
+  text-align: center;
+  flex: 1;
+}
+.topbar__btn {
+  min-width: 64px;
+  min-height: 60px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  font-size: 26px;
+  cursor: pointer;
+}
+.topbar__btn:active { transform: scale(0.96); }
+/* Invisible spacer keeps the title centered when a side has no button. */
+.topbar__spacer { min-width: 64px; }
+
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 20px 24px;
+  gap: 16px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* ---- Buttons & cards ---- */
+.big-btn {
+  min-height: 64px;
+  width: 100%;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+.big-btn:active { background: var(--accent-dark); transform: scale(0.98); }
+.big-btn--quiet { background: var(--card); color: var(--ink); }
+
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  width: 100%;
+}
+
+/* ---- Profile select ---- */
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 88px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px 18px;
+  font-size: 20px;
+  cursor: pointer;
+}
+.profile-card:active { transform: scale(0.98); }
+.profile-card__emoji { font-size: 40px; }
+.profile-card__name { font-weight: 800; font-size: 24px; }
+.profile-card__meta { color: var(--ink-soft); font-size: 15px; }
+.profile-card__stars { margin-left: auto; font-size: 18px; color: var(--accent-dark); font-weight: 700; }
+
+.tier-row { display: flex; gap: 10px; width: 100%; }
+.tier-btn {
+  flex: 1;
+  min-height: 92px;
+  border: 3px solid transparent;
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  font-size: 15px;
+  cursor: pointer;
+  padding: 8px;
+}
+.tier-btn--selected { border-color: var(--accent); }
+.tier-btn__emoji { font-size: 30px; display: block; }
+.tier-btn__label { font-weight: 800; font-size: 17px; display: block; margin-top: 2px; }
+
+.name-input {
+  width: 100%;
+  min-height: 60px;
+  border-radius: var(--radius);
+  border: 3px solid var(--accent);
+  font-size: 24px;
+  padding: 0 16px;
+  background: var(--card);
+  color: var(--ink);
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* ---- Home / map placeholder ---- */
+.map-area {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+}
+.map-spot {
+  min-height: 110px;
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 17px;
+}
+.map-spot__emoji { font-size: 34px; }
+.map-spot--locked { opacity: 0.45; }
+.map-spot__hint { font-size: 13px; font-weight: 400; color: var(--ink-soft); }
+
+.muted { color: var(--ink-soft); font-size: 15px; text-align: center; }
+
+/* ---- Settings rows ---- */
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee4d4;
+  font-size: 17px;
+}
+.settings-row:last-child { border-bottom: none; }
+
+/* Gentle celebration only if the user is OK with motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .bounce-in { animation: bounceIn 0.4s ease; }
+  @keyframes bounceIn {
+    0% { transform: scale(0.8); opacity: 0; }
+    60% { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+}
