@@ -11,8 +11,10 @@ import { Home } from './screens/Home';
 import { Settings } from './screens/Settings';
 import { TownSquare } from './screens/TownSquare';
 import { KeyDetective } from './screens/KeyDetective';
+import { MusicShop } from './screens/MusicShop';
+import { StaffReader } from './screens/StaffReader';
 
-type Screen = 'profiles' | 'home' | 'settings' | 'town' | 'game';
+type Screen = 'profiles' | 'home' | 'settings' | 'town' | 'game' | 'shop' | 'staffGame';
 
 /** Today as YYYY-MM-DD in local time (streaks are "days", not 24h windows). */
 function todayStr(): string {
@@ -99,6 +101,31 @@ export function App() {
     );
   }
 
+  if (screen === 'staffGame' && current) {
+    return (
+      <StaffReader
+        key={gameStage}
+        profile={current}
+        stageId={gameStage}
+        onFinish={(stageId, stars) => void awardStars(stageId, stars)}
+        onExit={() => setScreen('shop')}
+      />
+    );
+  }
+
+  if (screen === 'shop' && current) {
+    return (
+      <MusicShop
+        profile={current}
+        onPlay={(stageId) => {
+          setGameStage(stageId);
+          setScreen('staffGame');
+        }}
+        onBack={() => setScreen('home')}
+      />
+    );
+  }
+
   if (screen === 'town' && current) {
     return (
       <TownSquare
@@ -127,6 +154,7 @@ export function App() {
       <Home
         profile={current}
         onOpenTown={() => setScreen('town')}
+        onOpenShop={() => setScreen('shop')}
         onSwitchProfile={() => {
           setCurrent(null);
           setScreen('profiles');

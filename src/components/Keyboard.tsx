@@ -68,7 +68,12 @@ export function Keyboard({
           key={midi}
           className={cls(midi, 'kb__black')}
           aria-label={`${NOTE_INFO[midi % 12].name} key (black)`}
-          style={{ left: `calc(${whitesBefore * whiteW}% - ${whiteW * 0.31}%)` }}
+          style={{
+            left: `calc(${whitesBefore * whiteW}% - ${whiteW * 0.31}%)`,
+            // Width scales with the white keys so any range (5, 7, 9 whites)
+            // keeps correct proportions — the CSS has no fixed count.
+            width: `${whiteW * 0.62}%`,
+          }}
           onPointerDown={() => onKey(midi)}
         >
           {markedMidi === midi && <span className="kb__star">⭐</span>}

@@ -55,7 +55,7 @@ export function Settings({
           </div>
           <div className="settings-row">
             <span>App version</span>
-            <span>Phase 2 — Key Detective</span>
+            <span>Phase 3 — Staff Reader</span>
           </div>
         </div>
         <button className="big-btn big-btn--quiet" onClick={() => void handleExport()}>

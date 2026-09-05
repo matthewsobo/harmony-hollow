@@ -8,7 +8,6 @@ import { TopBar } from '../components/TopBar';
 import { Tempo } from '../components/Tempo';
 
 const LOCKED_SPOTS = [
-  { emoji: '🎵', name: 'Music Shop' },
   { emoji: '🌳', name: 'The Park' },
   { emoji: '🎭', name: 'Concert Hall' },
 ];
@@ -16,11 +15,13 @@ const LOCKED_SPOTS = [
 export function Home({
   profile,
   onOpenTown,
+  onOpenShop,
   onSwitchProfile,
   onSettings,
 }: {
   profile: Profile;
   onOpenTown: () => void;
+  onOpenShop: () => void;
   onSwitchProfile: () => void;
   onSettings: () => void;
 }) {
@@ -40,6 +41,11 @@ export function Home({
             <span className="map-spot__emoji">⛲</span>
             Town Square
             <span className="map-spot__hint">Key Detective!</span>
+          </button>
+          <button className="map-spot map-spot--open" onClick={onOpenShop}>
+            <span className="map-spot__emoji">🎵</span>
+            Music Shop
+            <span className="map-spot__hint">Staff Reader!</span>
           </button>
           {LOCKED_SPOTS.map((s) => (
             <div key={s.name} className="map-spot map-spot--locked">

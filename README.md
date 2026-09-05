@@ -7,6 +7,14 @@ Screen" and runs full-screen, offline.
 
 ## Current status
 
+**Phase 3** — Staff Reader is playable in the Music Shop: hand-rolled SVG
+notation (pre-staff note heads, treble and bass staves with landmark-line
+tinting, the grand staff), Stages 2 and 4–10, and "how many beats?" duration
+questions mixed in from Stage 4 up. Answers are either tapped on a
+range-adapting on-screen keyboard (5–9 white keys, so keys stay big) or big
+multiple-choice buttons. Shared round engine keeps the feel identical to Key
+Detective.
+
 **Phase 2** — Key Detective (tap variant) is playable: an on-screen keyboard
 teaching Stage 1 (Black Key Neighborhoods) and Stage 3 (White Key Names), with
 synthesized key sounds, spoken narration for the Junior tier, gentle hint

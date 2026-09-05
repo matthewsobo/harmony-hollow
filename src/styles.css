@@ -208,6 +208,29 @@ body {
 .praise { font-size: 28px; font-weight: 800; margin: 8px 0 0; }
 .star-count { font-size: 40px; margin: 6px 0 0; }
 
+/* ---- Staff display + choice answers (Staff Reader) ---- */
+.staff-card { padding: 8px 12px; }
+.staff-svg { width: 100%; height: auto; display: block; max-height: 34vh; }
+
+.choice-row { display: flex; flex-wrap: wrap; gap: 12px; width: 100%; }
+.choice-btn {
+  flex: 1 1 40%;
+  min-height: 68px;
+  border: 3px solid transparent;
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+  font-family: inherit;
+}
+.choice-btn:active { transform: scale(0.97); }
+.choice-btn--good { background: var(--green); color: #fff; }
+.choice-btn--bad { background: #f2c14e; }
+.choice-btn--glow { border-color: var(--accent); }
+
 /* ---- On-screen keyboard ---- */
 .kb {
   position: relative;
@@ -228,7 +251,7 @@ body {
 .kb__black {
   position: absolute;
   top: 0;
-  width: calc(100% / 7 * 0.62);
+  /* width comes inline from the component (scales with key count) */
   height: 58%;
   background: #3d3324;
   border: none;
