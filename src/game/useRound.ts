@@ -29,9 +29,15 @@ export function useRound(total: number, onFinish: (stars: number) => void) {
   const [flash, setFlash] = useState<RoundFlash | null>(null);
   const [praise, setPraise] = useState<string | null>(null);
   const [done, setDone] = useState(false);
-  // Ref, not state: taps during the celebration window must be ignored
-  // synchronously, before React re-renders.
+  // The decision state lives in REFS, mirrored to state for rendering. This
+  // matters because mic-based modes register their note callback ONCE — it
+  // captures the first render's `answer` forever, so reading `misses` or
+  // `done` from state closures would always see stale values (a real bug we
+  // hit: mic rounds scored every answer as first-try).
   const lockedRef = useRef(false);
+  const missesRef = useRef(0);
+  const doneRef = useRef(false);
+  const qIndexRef = useRef(0);
 
   // Fire the finish callback exactly once, with the fanfare.
   useEffect(() => {
@@ -44,29 +50,31 @@ export function useRound(total: number, onFinish: (stars: number) => void) {
 
   /** Report an answer. Returns true if it was accepted (not locked). */
   function answer(correct: boolean, id: string | number): boolean {
-    if (lockedRef.current || done) return false;
+    if (lockedRef.current || doneRef.current) return false;
     if (correct) {
       lockedRef.current = true;
       setFlash({ id, kind: 'good' });
       setPraise(ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)]);
-      setStars((s) => s + (misses === 0 ? 2 : 1));
+      setStars((s) => s + (missesRef.current === 0 ? 2 : 1));
       setTimeout(() => playCorrectJingle(), 150);
       setTimeout(() => {
         lockedRef.current = false;
         setFlash(null);
         setPraise(null);
+        missesRef.current = 0;
         setMisses(0);
-        setQIndex((i) => {
-          if (i + 1 >= total) {
-            setDone(true);
-            return i;
-          }
-          return i + 1;
-        });
+        if (qIndexRef.current + 1 >= total) {
+          doneRef.current = true;
+          setDone(true);
+        } else {
+          qIndexRef.current++;
+          setQIndex(qIndexRef.current);
+        }
       }, 900);
     } else {
       setFlash({ id, kind: 'bad' });
-      setMisses((m) => m + 1);
+      missesRef.current++;
+      setMisses(missesRef.current);
       setTimeout(() => setFlash(null), 350);
     }
     return true;

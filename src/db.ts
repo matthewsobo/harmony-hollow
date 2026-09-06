@@ -14,19 +14,56 @@ import type { Profile } from './types';
 
 interface HHDB extends DBSchema {
   profiles: { key: string; value: Profile };
+  /** Small device-wide key-value store (mic calibration, future settings). */
+  kv: { key: string; value: unknown };
 }
 
 let dbPromise: Promise<IDBPDatabase<HHDB>> | null = null;
 
 function getDB(): Promise<IDBPDatabase<HHDB>> {
   if (!dbPromise) {
-    dbPromise = openDB<HHDB>('harmony-hollow', 1, {
+    dbPromise = openDB<HHDB>('harmony-hollow', 2, {
+      // upgrade() runs once per version step and must create only what's
+      // missing — existing stores (and their data) are preserved.
       upgrade(db) {
-        db.createObjectStore('profiles', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('profiles')) {
+          db.createObjectStore('profiles', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('kv')) {
+          db.createObjectStore('kv');
+        }
       },
     });
   }
   return dbPromise;
+}
+
+// ---- Mic calibration settings (device-wide, not per profile) ---------------
+
+export interface MicSettings {
+  /** RMS gate: ignore sound quieter than this. Set by calibration. */
+  gateThreshold: number;
+  /** How sharp (+) or flat (−) the family piano runs, in cents. */
+  tuningOffsetCents: number;
+  /** Whether calibration has ever completed on this device. */
+  calibrated: boolean;
+}
+
+export const DEFAULT_MIC_SETTINGS: MicSettings = {
+  gateThreshold: 0.01,
+  tuningOffsetCents: 0,
+  calibrated: false,
+};
+
+export async function getMicSettings(): Promise<MicSettings> {
+  const db = await getDB();
+  const stored = (await db.get('kv', 'micSettings')) as Partial<MicSettings> | undefined;
+  return { ...DEFAULT_MIC_SETTINGS, ...stored };
+}
+
+export async function saveMicSettings(settings: MicSettings): Promise<void> {
+  const db = await getDB();
+  await db.put('kv', settings, 'micSettings');
 }
 
 export async function getAllProfiles(): Promise<Profile[]> {

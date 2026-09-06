@@ -5,6 +5,7 @@
  */
 import { TopBar } from '../components/TopBar';
 import { stageName } from '../content/stages';
+import { micAvailable } from '../mic/MicPitchInputSource';
 import type { Profile } from '../types';
 
 const ADVENTURES = [
@@ -15,12 +16,16 @@ const ADVENTURES = [
 export function TownSquare({
   profile,
   onPlay,
+  onPlayMic,
   onBack,
 }: {
   profile: Profile;
   onPlay: (stageId: number) => void;
+  /** "Find it for real" — the same adventure answered on the real piano. */
+  onPlayMic: (stageId: number) => void;
   onBack: () => void;
 }) {
+  const hasMic = micAvailable();
   return (
     <>
       <TopBar title="⛲ Town Square" onBack={onBack} />
@@ -29,19 +34,32 @@ export function TownSquare({
         {ADVENTURES.map((a) => {
           const prog = profile.stageProgress[a.stageId];
           return (
-            <button key={a.stageId} className="profile-card" onClick={() => onPlay(a.stageId)}>
-              <span className="profile-card__emoji">{a.emoji}</span>
-              <span>
-                <span className="profile-card__name" style={{ fontSize: 20 }}>
-                  {stageName(a.stageId)}
+            <div key={a.stageId} style={{ display: 'flex', gap: 8, width: '100%' }}>
+              <button className="profile-card" onClick={() => onPlay(a.stageId)}>
+                <span className="profile-card__emoji">{a.emoji}</span>
+                <span>
+                  <span className="profile-card__name" style={{ fontSize: 20 }}>
+                    {stageName(a.stageId)}
+                  </span>
+                  <br />
+                  <span className="profile-card__meta">{a.blurb}</span>
                 </span>
-                <br />
-                <span className="profile-card__meta">{a.blurb}</span>
-              </span>
-              <span className="profile-card__stars">⭐ {prog?.stars ?? 0}</span>
-            </button>
+                <span className="profile-card__stars">⭐ {prog?.stars ?? 0}</span>
+              </button>
+              {hasMic && (
+                <button
+                  className="topbar__btn"
+                  aria-label={`Play ${stageName(a.stageId)} on the real piano`}
+                  title="Find it for real (microphone)"
+                  onClick={() => onPlayMic(a.stageId)}
+                >
+                  🎤
+                </button>
+              )}
+            </div>
           );
         })}
+        {hasMic && <p className="muted">Tap 🎤 to find the keys on the real piano!</p>}
       </main>
     </>
   );

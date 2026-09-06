@@ -4,19 +4,25 @@
  * family's insurance against iOS evicting IndexedDB, and the only way
  * progress moves between devices (no cloud sync by design).
  */
-import { useRef, useState } from 'react';
-import { exportData, importData } from '../db';
+import { useEffect, useRef, useState } from 'react';
+import { exportData, getMicSettings, importData, type MicSettings } from '../db';
 import { TopBar } from '../components/TopBar';
 
 export function Settings({
   persisted,
   onBack,
   onDataImported,
+  onCalibrate,
 }: {
   persisted: boolean | null;
   onBack: () => void;
   onDataImported: () => void;
+  onCalibrate: () => void;
 }) {
+  const [micSettings, setMicSettings] = useState<MicSettings | null>(null);
+  useEffect(() => {
+    void getMicSettings().then(setMicSettings);
+  }, []);
   const fileRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState('');
 
@@ -54,10 +60,23 @@ export function Settings({
             <span>{persisted === null ? 'checking…' : persisted ? 'on ✔' : 'not granted'}</span>
           </div>
           <div className="settings-row">
+            <span>Piano calibration</span>
+            <span>
+              {micSettings === null
+                ? 'checking…'
+                : micSettings.calibrated
+                  ? `${Math.abs(micSettings.tuningOffsetCents).toFixed(0)}¢ ${micSettings.tuningOffsetCents >= 0 ? 'sharp' : 'flat'} · gate ${micSettings.gateThreshold.toFixed(3)}`
+                  : 'not yet tuned'}
+            </span>
+          </div>
+          <div className="settings-row">
             <span>App version</span>
-            <span>Phase 3 — Staff Reader</span>
+            <span>Phase 4 — Mic play</span>
           </div>
         </div>
+        <button className="big-btn big-btn--quiet" onClick={onCalibrate}>
+          🎹 Tune up the microphone
+        </button>
         <button className="big-btn big-btn--quiet" onClick={() => void handleExport()}>
           ⬇️ Save progress backup
         </button>

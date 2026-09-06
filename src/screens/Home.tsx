@@ -7,21 +7,18 @@ import { TIER_INFO, type Profile } from '../types';
 import { TopBar } from '../components/TopBar';
 import { Tempo } from '../components/Tempo';
 
-const LOCKED_SPOTS = [
-  { emoji: '🌳', name: 'The Park' },
-  { emoji: '🎭', name: 'Concert Hall' },
-];
-
 export function Home({
   profile,
   onOpenTown,
   onOpenShop,
+  onOpenPark,
   onSwitchProfile,
   onSettings,
 }: {
   profile: Profile;
   onOpenTown: () => void;
   onOpenShop: () => void;
+  onOpenPark: () => void;
   onSwitchProfile: () => void;
   onSettings: () => void;
 }) {
@@ -47,13 +44,16 @@ export function Home({
             Music Shop
             <span className="map-spot__hint">Staff Reader!</span>
           </button>
-          {LOCKED_SPOTS.map((s) => (
-            <div key={s.name} className="map-spot map-spot--locked">
-              <span className="map-spot__emoji">🔒</span>
-              {s.name}
-              <span className="map-spot__hint">Locked</span>
-            </div>
-          ))}
+          <button className="map-spot map-spot--open" onClick={onOpenPark}>
+            <span className="map-spot__emoji">🌳</span>
+            The Park
+            <span className="map-spot__hint">Echo Keys! 🎤</span>
+          </button>
+          <div className="map-spot map-spot--locked">
+            <span className="map-spot__emoji">🔒</span>
+            Concert Hall
+            <span className="map-spot__hint">Locked</span>
+          </div>
         </div>
       </main>
     </>

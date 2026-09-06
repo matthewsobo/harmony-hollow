@@ -14,6 +14,12 @@ export const KB_HIGH = 71; // B4
 
 /** One tap-the-key question, ready for the engine to present. */
 export interface KDQuestion {
+  /**
+   * Mic rounds set this: any octave of the right letter counts. On a real
+   * piano the child roams the whole keyboard, and finding "a C" in any octave
+   * is the actual skill being taught.
+   */
+  matchPitchClass?: boolean;
   stageId: number;
   /** Short prompt line (icons + few words — minimal reading load). */
   prompt: string;
@@ -122,21 +128,25 @@ function stage3Question(letter: string): KDQuestion {
  * appears before any repeats (so a round actually covers the alphabet instead
  * of asking for G five times by luck).
  */
-export function makeRound(stageId: number, count: number): KDQuestion[] {
+export function makeRound(stageId: number, count: number, micMode = false): KDQuestion[] {
   if (stageId === 3) {
     const letters = shuffle(Object.keys(WHITE_INFO));
-    return Array.from({ length: count }, (_, i) =>
-      stage3Question(letters[i % letters.length])
-    );
+    return Array.from({ length: count }, (_, i) => ({
+      ...stage3Question(letters[i % letters.length]),
+      matchPitchClass: micMode,
+    }));
   }
   // Stage 1: random flavors, but never the same flavor 3x in a row by
-  // regenerating on immediate repeats (cheap variety guard).
+  // regenerating on immediate repeats (cheap variety guard). Mic rounds skip
+  // the higher/lower questions — the ⭐ reference key is on screen, not on
+  // the real piano, so the comparison doesn't translate.
   const round: KDQuestion[] = [];
   while (round.length < count) {
     const q = stage1Question();
+    if (micMode && q.markedMidi !== undefined) continue;
     const prev = round[round.length - 1];
     if (prev && prev.prompt === q.prompt && Math.random() < 0.7) continue;
-    round.push(q);
+    round.push({ ...q, matchPitchClass: micMode });
   }
   return round;
 }

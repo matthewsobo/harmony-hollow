@@ -7,6 +7,16 @@ Screen" and runs full-screen, offline.
 
 ## Current status
 
+**Phase 4** — Microphone play is in. The Park opens with **Echo Keys** (Tempo
+plays a pattern, the child plays it back on the real piano) and Town Square's
+adventures grew a 🎤 "find it for real" variant. A **Tune Up** flow (Settings,
+or prompted in-game) measures the room's noise floor and the piano's tuning
+drift from three Middle C strikes. The pitch pipeline is the Phase 0 YIN
+detector ported to TypeScript behind the `InputSource` interface; mic matching
+is by letter (any octave), and every mic screen falls back gracefully to the
+tap games if the mic won't start. Dev note: add `?fakemic=1` to the URL to
+drive mic games from the console via `window.__fakeNote(midi, cents?)`.
+
 **Phase 3** — Staff Reader is playable in the Music Shop: hand-rolled SVG
 notation (pre-staff note heads, treble and bass staves with landmark-line
 tinting, the grand staff), Stages 2 and 4–10, and "how many beats?" duration

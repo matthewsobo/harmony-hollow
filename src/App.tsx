@@ -13,8 +13,12 @@ import { TownSquare } from './screens/TownSquare';
 import { KeyDetective } from './screens/KeyDetective';
 import { MusicShop } from './screens/MusicShop';
 import { StaffReader } from './screens/StaffReader';
+import { EchoKeys } from './screens/EchoKeys';
+import { Calibrate } from './screens/Calibrate';
 
-type Screen = 'profiles' | 'home' | 'settings' | 'town' | 'game' | 'shop' | 'staffGame';
+type Screen =
+  | 'profiles' | 'home' | 'settings' | 'town' | 'game'
+  | 'shop' | 'staffGame' | 'park' | 'calibrate';
 
 /** Today as YYYY-MM-DD in local time (streaks are "days", not 24h windows). */
 function todayStr(): string {
@@ -46,6 +50,9 @@ export function App() {
   const [current, setCurrent] = useState<Profile | null>(null);
   const [persisted, setPersisted] = useState<boolean | null>(null);
   const [gameStage, setGameStage] = useState<number>(1);
+  const [gameMic, setGameMic] = useState(false);
+  // Where the calibrate screen should return to when done.
+  const [calibrateReturn, setCalibrateReturn] = useState<Screen>('settings');
 
   // First run: load profiles and ask the browser to protect our storage.
   useEffect(() => {
@@ -88,15 +95,38 @@ export function App() {
     await refreshProfiles();
   }
 
+  if (screen === 'calibrate') {
+    return <Calibrate onBack={() => setScreen(calibrateReturn)} />;
+  }
+
+  if (screen === 'park' && current) {
+    return (
+      <EchoKeys
+        profile={current}
+        onFinish={(stageId, stars) => void awardStars(stageId, stars)}
+        onExit={() => setScreen('home')}
+        onCalibrate={() => {
+          setCalibrateReturn('park');
+          setScreen('calibrate');
+        }}
+      />
+    );
+  }
+
   if (screen === 'game' && current) {
     return (
       <KeyDetective
-        // key forces a fresh round when the stage changes mid-session
-        key={gameStage}
+        // key forces a fresh round when the stage or mode changes mid-session
+        key={`${gameStage}-${gameMic}`}
         profile={current}
         stageId={gameStage}
+        mic={gameMic}
         onFinish={(stageId, stars) => void awardStars(stageId, stars)}
         onExit={() => setScreen('town')}
+        onCalibrate={() => {
+          setCalibrateReturn('game');
+          setScreen('calibrate');
+        }}
       />
     );
   }
@@ -132,6 +162,12 @@ export function App() {
         profile={current}
         onPlay={(stageId) => {
           setGameStage(stageId);
+          setGameMic(false);
+          setScreen('game');
+        }}
+        onPlayMic={(stageId) => {
+          setGameStage(stageId);
+          setGameMic(true);
           setScreen('game');
         }}
         onBack={() => setScreen('home')}
@@ -145,6 +181,10 @@ export function App() {
         persisted={persisted}
         onBack={() => setScreen(current ? 'home' : 'profiles')}
         onDataImported={() => void refreshProfiles()}
+        onCalibrate={() => {
+          setCalibrateReturn('settings');
+          setScreen('calibrate');
+        }}
       />
     );
   }
@@ -155,6 +195,7 @@ export function App() {
         profile={current}
         onOpenTown={() => setScreen('town')}
         onOpenShop={() => setScreen('shop')}
+        onOpenPark={() => setScreen('park')}
         onSwitchProfile={() => {
           setCurrent(null);
           setScreen('profiles');
