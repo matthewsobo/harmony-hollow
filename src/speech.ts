@@ -11,9 +11,26 @@ export function speechAvailable(): boolean {
   return typeof window !== 'undefined' && 'speechSynthesis' in window;
 }
 
-export function narrate(text: string): void {
+let lastText = '';
+let lastSpokenAt = 0;
+
+export function narrate(text: string, opts: { force?: boolean } = {}): void {
   try {
     if (!speechAvailable()) return;
+    // Repeat-loop guard (real-device bug): identical text requested again
+    // while still speaking, or within a short window, is skipped — e.g. a
+    // ringing note re-firing the same miss hint over and over. The 🔊 replay
+    // button passes force:true because there a repeat IS the point.
+    const now = Date.now();
+    if (
+      !opts.force &&
+      text === lastText &&
+      (window.speechSynthesis.speaking || now - lastSpokenAt < 2500)
+    ) {
+      return;
+    }
+    lastText = text;
+    lastSpokenAt = now;
     // One voice at a time: a new prompt always cancels the old one.
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);

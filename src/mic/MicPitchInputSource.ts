@@ -28,7 +28,13 @@ const BUF_SIZE = 4096;         // ~85ms at 48kHz — resolves C3, feels instant
 const CONFIRM_FRAMES = 5;
 const MAX_CENTS_SPAN = 30;
 const CLARITY_MIN = 0.8;
-const REARM_QUIET_FRAMES = 3;  // this many gated frames = "gap between notes"
+// Re-arming (allowing the SAME note to trigger again) requires ~200ms of
+// genuine silence, well below the gate. The first cut used 3 frames (~50ms)
+// right at the gate line — a long-ringing piano note decaying across the
+// threshold would dip out and back, re-fire the same answer, and (on a wrong
+// answer) re-narrate the hint in a loop. Real device testing caught it.
+const REARM_QUIET_FRAMES = 12;
+const REARM_LEVEL_FACTOR = 0.7; // silence = below 70% of the gate, not just below it
 
 export class MicPitchInputSource implements InputSource {
   readonly label = 'Microphone (acoustic piano)';
@@ -71,8 +77,13 @@ export class MicPitchInputSource implements InputSource {
       if (this.level < this.config.gateThreshold) {
         this.detectedMidi = null;
         this.resetStreak();
-        this.quietFrames++;
-        if (this.quietFrames >= REARM_QUIET_FRAMES) this.armed = true;
+        // Only clearly-quiet frames count toward re-arming; the band between
+        // 70% and 100% of the gate is a dead zone (neither detects nor re-arms),
+        // so a note decaying across the threshold can't re-trigger itself.
+        if (this.level < this.config.gateThreshold * REARM_LEVEL_FACTOR) {
+          this.quietFrames++;
+          if (this.quietFrames >= REARM_QUIET_FRAMES) this.armed = true;
+        }
       } else {
         this.quietFrames = 0;
         const r = detectPitch(this.buf, this.ctx.sampleRate);

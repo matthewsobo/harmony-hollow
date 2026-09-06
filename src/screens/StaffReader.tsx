@@ -105,7 +105,11 @@ export function StaffReader({
 
         <div className="prompt-card card">
           <span className="prompt-text">{q.prompt}</span>
-          <button className="topbar__btn" aria-label="Read the question aloud" onClick={() => narrate(q.narration)}>
+          <button
+            className="topbar__btn"
+            aria-label="Read the question aloud"
+            onClick={() => narrate(q.narration, { force: true })}
+          >
             🔊
           </button>
         </div>

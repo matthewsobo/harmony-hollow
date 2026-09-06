@@ -178,7 +178,7 @@ export function KeyDetective({
           <button
             className="topbar__btn"
             aria-label="Read the question aloud"
-            onClick={() => narrate(q.narration)}
+            onClick={() => narrate(q.narration, { force: true })}
           >
             🔊
           </button>
