@@ -15,10 +15,13 @@ import { MusicShop } from './screens/MusicShop';
 import { StaffReader } from './screens/StaffReader';
 import { EchoKeys } from './screens/EchoKeys';
 import { Calibrate } from './screens/Calibrate';
+import { ConcertHall } from './screens/ConcertHall';
+import { SoundDetective } from './screens/SoundDetective';
+import type { SDKind } from './content/soundDetective';
 
 type Screen =
   | 'profiles' | 'home' | 'settings' | 'town' | 'game'
-  | 'shop' | 'staffGame' | 'park' | 'calibrate';
+  | 'shop' | 'staffGame' | 'park' | 'calibrate' | 'hall' | 'earGame';
 
 /** Today as YYYY-MM-DD in local time (streaks are "days", not 24h windows). */
 function todayStr(): string {
@@ -51,6 +54,7 @@ export function App() {
   const [persisted, setPersisted] = useState<boolean | null>(null);
   const [gameStage, setGameStage] = useState<number>(1);
   const [gameMic, setGameMic] = useState(false);
+  const [earKind, setEarKind] = useState<SDKind>('higherLower');
   // Where the calibrate screen should return to when done.
   const [calibrateReturn, setCalibrateReturn] = useState<Screen>('settings');
 
@@ -97,6 +101,35 @@ export function App() {
 
   if (screen === 'calibrate') {
     return <Calibrate onBack={() => setScreen(calibrateReturn)} />;
+  }
+
+  if (screen === 'earGame' && current) {
+    return (
+      <SoundDetective
+        key={earKind}
+        profile={current}
+        kind={earKind}
+        onFinish={(stageId, stars) => void awardStars(stageId, stars)}
+        onExit={() => setScreen('hall')}
+        onCalibrate={() => {
+          setCalibrateReturn('earGame');
+          setScreen('calibrate');
+        }}
+      />
+    );
+  }
+
+  if (screen === 'hall' && current) {
+    return (
+      <ConcertHall
+        profile={current}
+        onPlay={(kind) => {
+          setEarKind(kind);
+          setScreen('earGame');
+        }}
+        onBack={() => setScreen('home')}
+      />
+    );
   }
 
   if (screen === 'park' && current) {
@@ -196,6 +229,7 @@ export function App() {
         onOpenTown={() => setScreen('town')}
         onOpenShop={() => setScreen('shop')}
         onOpenPark={() => setScreen('park')}
+        onOpenHall={() => setScreen('hall')}
         onSwitchProfile={() => {
           setCurrent(null);
           setScreen('profiles');

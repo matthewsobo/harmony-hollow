@@ -71,7 +71,7 @@ export function Settings({
           </div>
           <div className="settings-row">
             <span>App version</span>
-            <span>Phase 4 — Mic play</span>
+            <span>Phase 5 — Sound Detective</span>
           </div>
         </div>
         <button className="big-btn big-btn--quiet" onClick={onCalibrate}>

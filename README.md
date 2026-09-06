@@ -7,6 +7,13 @@ Screen" and runs full-screen, offline.
 
 ## Current status
 
+**Phase 5** — Sound Detective opens the Concert Hall: five ear-training games
+with unlimited penalty-free replays. Higher-or-Lower, Same-or-Different and
+Which-Way-Did-It-Go run on all tiers (difficulty scales by shrinking the pitch
+gap; Junior hears wide, obvious gaps). Name-That-Interval (wide intervals
+first) and the mic-based Match-It-on-the-Piano unlock for Explorer/Adventurer.
+Stars bank into the aligned curriculum stages.
+
 **Phase 4** — Microphone play is in. The Park opens with **Echo Keys** (Tempo
 plays a pattern, the child plays it back on the real piano) and Town Square's
 adventures grew a 🎤 "find it for real" variant. A **Tune Up** flow (Settings,

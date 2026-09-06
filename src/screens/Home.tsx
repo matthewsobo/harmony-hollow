@@ -12,6 +12,7 @@ export function Home({
   onOpenTown,
   onOpenShop,
   onOpenPark,
+  onOpenHall,
   onSwitchProfile,
   onSettings,
 }: {
@@ -19,6 +20,7 @@ export function Home({
   onOpenTown: () => void;
   onOpenShop: () => void;
   onOpenPark: () => void;
+  onOpenHall: () => void;
   onSwitchProfile: () => void;
   onSettings: () => void;
 }) {
@@ -49,11 +51,11 @@ export function Home({
             The Park
             <span className="map-spot__hint">Echo Keys! 🎤</span>
           </button>
-          <div className="map-spot map-spot--locked">
-            <span className="map-spot__emoji">🔒</span>
+          <button className="map-spot map-spot--open" onClick={onOpenHall}>
+            <span className="map-spot__emoji">🎭</span>
             Concert Hall
-            <span className="map-spot__hint">Locked</span>
-          </div>
+            <span className="map-spot__hint">Sound Detective!</span>
+          </button>
         </div>
       </main>
     </>
